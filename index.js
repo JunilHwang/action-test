@@ -6,7 +6,7 @@ const d = `0${date.getDate()}`.substr(-2);
 
 axios.post(`https://api.github.com/repos/${process.env.REPO}/issues`, {
   title: `${y} ${m} ${d}`,
-  body: ''
+  body: `${date.toISOString()}`
 }, {
   headers: {
     authorization: `Bearer ${process.env.TOKEN}`
