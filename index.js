@@ -1,18 +1,30 @@
 const axios = require("axios");
-
-const utc = require('dayjs/plugin/utc');
-const timezone = require('dayjs/plugin/timezone');
 const dayjs = require("dayjs");
+const githubClient = axios.create({
+  baseURL: `https://api.github.com/repos/${process.env.REPO}`,
+  timeout: 5000,
+  headers: { authorization: `Bearer ${process.env.TOKEN}` }
+});
 
-dayjs.extend(utc)
-dayjs.extend(timezone)
-dayjs.tz.setDefault("Asia/Seoul");
+githubClient.interceptors.response.use(({ data }) => data, error => Promise.reject(error));
 
-axios.post(`https://api.github.com/repos/${process.env.REPO}/issues`, {
-  title: dayjs().format("YYYY MM DD"),
-  body: dayjs().format("YYYY-MM-DD HH:mm:ss")
-}, {
-  headers: {
-    authorization: `Bearer ${process.env.TOKEN}`
-  }
-}).then(({ data }) => console.log(data));
+function fetchIssues() {
+  return githubClient.get(`/issues`);
+}
+
+function postIssue() {
+  return githubClient.post(`/issues`, {
+    title: dayjs().format("YYYY MM DD"),
+    body: ''
+  });
+}
+
+async function main() {
+  const issues = (await fetchIssues()) || [];
+  await Promise.all(issues.map(({ number }) =>
+    githubClient.patch(`/issues/${number}`, { state: 'closed' })
+  ));
+  return postIssue()
+}
+
+main().then(console.log);
