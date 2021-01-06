@@ -21,19 +21,17 @@ jobs:
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
-      - uses: actions/checkout@v1
-      - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v2
-        with:
-          node-version: ${{ matrix.node-version }}
       - name: Setup timezone
         uses: zcong1993/setup-timezone@master
         with:
           timezone: Asia/Seoul
-      - name: npm install, build, and test
-        env:
-          TOKEN: ${{ secrets.TOKEN }}
-          REPO: ${{ github.repository }}
+      - name: Create Issue
         run: |
-          npm install
-          npm run start
+          curl --request POST \
+          --url https://api.github.com/repos/${{ github.repository }}/issues \
+          --header 'authorization: Bearer ${{ secrets.TOKEN }}' \
+          --header 'content-type: application/json' \
+          --data "{
+            \"title\": \"$(date +'%Y %m %d')\",
+            \"body\": \"$(date)\"
+            }"
